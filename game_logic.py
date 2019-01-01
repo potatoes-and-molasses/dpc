@@ -38,6 +38,7 @@ class game:
 		self.height = args['dim_y']
 		self.width = args['dim_x']
 		self.field = [[NEUTRAL_BLOCK if (random.random() < args['prob']) else EMPTY_SQUARE for i in range(self.width)] for j in range(self.height)]
+		self.turn_time = args['turn_time']
 		self.current_turn = 0
 		self.p1_resources = 0
 		self.p2_resources = 0
@@ -96,7 +97,7 @@ class game:
 		return 1
 	
 	def update_resources(self):
-		print(self.field)
+		#print(self.field)
 		p1_tmp, p2_tmp = 0, 0
 		for i in self.field:
 			for j in i:

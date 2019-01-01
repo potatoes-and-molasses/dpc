@@ -14,9 +14,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--server', help='http://address:port of the server you connect to')
 parser.add_argument('-g', '--game-id', help='a unique code used to join your game(you can make one up)')
 parser.add_argument('-n', '--name', help='your display name in the game')
-parser.add_argument('-x', '--dim_x', help='dim_x of board, not needed if joining')
-parser.add_argument('-y', '--dim_y', help='dim_y of board, not needed if joining')
+parser.add_argument('-x', '--dim-x', help='dim_x of board, not needed if joining')
+parser.add_argument('-y', '--dim-y', help='dim_y of board, not needed if joining')
 parser.add_argument('-p', '--prob', help='density of blocked squares, not needed if joining')
+parser.add_argument('-t', '--turn-time', help='time per turn, not needed if joining')
 
 args = parser.parse_args()              
          
@@ -29,6 +30,7 @@ if not join:
 	dim_x = int(args.dim_x)
 	dim_y = int(args.dim_y)
 	prob = float(args.prob)
+	turn_time = int(args.turn_time)
 
 
 
@@ -52,8 +54,8 @@ class client:
 		ui.recolor_board()
 		return r
 
-	def send_create(self, dim_x, dim_y, prob):
-		r = requests.post(self.address+'/create/'+self.game_name, data={'player_name':self.player_name,'dim_x':dim_x, 'dim_y':dim_y, 'prob':prob}, cookies=jarjar)
+	def send_create(self, dim_x, dim_y, prob, turn_time):
+		r = requests.post(self.address+'/create/'+self.game_name, data={'player_name':self.player_name,'dim_x':dim_x, 'dim_y':dim_y, 'prob':prob, 'turn_time':turn_time}, cookies=jarjar)
 		return r
 
 	def send_join(self):
@@ -77,7 +79,7 @@ class client:
 		pass
 
 class board:
-	def __init__(self, height, width, prob):
+	def __init__(self, height, width, prob, turn_time):
 		#placeholder
 		self.height = height
 		self.width = width
@@ -87,10 +89,10 @@ class board:
 		self.p1_gain = 0
 		self.p2_gain = 0
 		self.turn = 0
-		self.timer = -1
+		#self.timer = -1
 		
-		self.max_time = 10
-		self.time_left = 10
+		self.turn_time = turn_time
+		self.time_left = turn_time
 	
 	def update(self, p1_gain, p2_gain, p1_resources, p2_resources, field, turn):
 		self.p1_gain = p1_gain
@@ -101,7 +103,7 @@ class board:
 		if turn == self.turn:
 			self.time_left -= 1
 		else:
-			self.time_left = self.max_time
+			self.time_left = self.turn_time
 		
 		self.turn = turn
 	
@@ -142,19 +144,19 @@ cl = client(address, game, pname)
 if join:
 	res = cl.send_join()
 	args = res.json()
-	dim_x, dim_y, prob = args['dim_x'], args['dim_y'], args['prob']
+	dim_x, dim_y, prob, turn_time = args['dim_x'], args['dim_y'], args['prob'], args['turn_time']
 else:
-	res = cl.send_create(dim_x, dim_y, prob)
+	res = cl.send_create(dim_x, dim_y, prob, turn_time)
 jarjar = res.cookies
 
-nice_board = board(dim_x, dim_y, prob)
+nice_board = board(dim_x, dim_y, prob, turn_time)
 r = input('press enter when ready')
 res = cl.send_start()
 if not res.json()['result']:
 	print('waiting for players to join...')
 	while 1:
 		res = cl.send_status()
-		print(res.content)
+		#print(res.content)
 		if res.json()['state']=='ongoing_game':
 			break
 		time.sleep(2)

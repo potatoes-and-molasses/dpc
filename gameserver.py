@@ -32,13 +32,13 @@ class CreateSub(Resource):
 	def render_POST(self, request):
 		user_id = request.getSession().uid.decode('utf-8')
 		player_name = request.args[b'player_name'][0].decode('utf-8')
-		dim_x, dim_y = int(request.args[b'dim_x'][0]), int(request.args[b'dim_y'][0])
+		dim_x, dim_y, turn_time = int(request.args[b'dim_x'][0]), int(request.args[b'dim_y'][0]), int(request.args[b'turn_time'][0])
 		prob = float(request.args[b'prob'][0])
 		if self.name in prep_area or self.name in ongoing_games:
 			print('game already in prep or ongoing')
 			res = {'result': RESULT_ERROR, 'message': 'a game with this name already exists'}
 		else:
-			prep_area[self.name] = {'name':self.name, 'dim_x':dim_x, 'dim_y': dim_y, 'prob': prob,
+			prep_area[self.name] = {'name':self.name, 'dim_x':dim_x, 'dim_y': dim_y, 'prob': prob, 'turn_time':turn_time,
 									'players_list':{user_id:player_name}, 'ready':{}}
 			print('game added to prep area: {}'.format(prep_area[self.name]))
 			res = {i:v for i,v in prep_area[self.name].items()}
@@ -73,7 +73,7 @@ class JoinSub(Resource):
 				else:
 					prep_area[self.name]['players_list'][user_id] = player_name
 					print('joining game %s as %s(uid:%s)' % (self.name, player_name, user_id))
-					res = {'result': RESULT_SUCCESS, 'name': self.name, 'dim_x':prep_area[self.name]['dim_x'], 'dim_y':prep_area[self.name]['dim_y'], 'prob':prep_area[self.name]['prob']}
+					res = {'result': RESULT_SUCCESS, 'name': self.name, 'dim_x':prep_area[self.name]['dim_x'], 'dim_y':prep_area[self.name]['dim_y'], 'prob':prep_area[self.name]['prob'], 'turn_time':prep_area[self.name]['turn_time']}
 		else:
 			print('game does not exist')
 			res = {'result': RESULT_ERROR, 'message': 'game does not exist'}
